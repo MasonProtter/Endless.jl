@@ -1,72 +1,25 @@
 module Endless
 
-export @macro
+export @macro, @while, @for, @let
 
-macrodef =
-    Expr(
-        :macro,
-        Expr(
-            :call,
-            :macro,
-            :sig,
-            :body
-        ),
-        Expr(
-            :block,
-            Expr(
-                :quote,
-                Expr(
-                    :macro,
-                    Expr(
-                        :call,
-                        Expr(
-                            :$,
-                            Expr(
-                                :call,
-                                :esc,
-                                Expr(
-                                    :ref,
-                                    Expr(
-                                        :.,
-                                        :sig,
-                                        QuoteNode(:args)
-                                    ),
-                                    1
-                                )
-                            )
-                        ),
-                        Expr(
-                            :$,
-                            Expr(
-                                :...,
-                                Expr(
-                                    :ref,
-                                    Expr(
-                                        :.,
-                                        :sig,
-                                        QuoteNode(:args)
-                                    ),
-                                    Expr(
-                                        :call,
-                                        :(:),
-                                        2,
-                                        :end
-                                    )
-                                )
-                            )
-                        ),
-                    ),
-                    Expr(
-                        :block,
-                        Expr(
-                            :$,
-                            :body
-                        )
-                    )
-                )
-            )
-        )
-    )
-eval(macrodef)
+eval(Expr(:macro, Expr(:call, :macro, :name, :args, :body), 
+          :(nothing; Expr(:macro, esc(:($name($(args.args...)))), 
+                          esc(:(nothing; $body))))))
+
+eval(Expr(:macro, Expr(:call, :while, :cond, :body), 
+          :(nothing; esc(Expr(:while, cond, body)))))
+
+eval(Expr(:macro, Expr(:call, :while, :cond), 
+          :(nothing; esc(Expr(:while, cond, nothing)))))
+
+eval(Expr(:macro, Expr(:call, :for, :iter, :body), 
+          :(nothing; esc(Expr(:for,   iter, body)))))
+
+eval(Expr(:macro, Expr(:call, :let, :body), 
+          :(nothing; esc(Expr(:let, Expr(:block), body)))))
+
+eval(Expr(:macro, Expr(:call, :let, :bindings, :body), 
+          :(nothing; esc(Expr(:let, Expr(:block, bindings.args...), body)))))
+
 
 end # module
